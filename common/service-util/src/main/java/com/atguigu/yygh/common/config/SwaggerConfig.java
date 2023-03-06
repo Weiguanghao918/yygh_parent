@@ -1,18 +1,26 @@
 package com.atguigu.yygh.common.config;
 
-import com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j;
 import com.google.common.base.Predicate;
-import lombok.extern.slf4j.Slf4j;
+import com.google.common.base.Predicates;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.RequestHandler;
 import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.schema.ModelRef;
 import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
+import springfox.documentation.service.Parameter;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -20,30 +28,50 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
  * @create 2023-03-06 15:22
  */
 @Configuration
-@EnableSwagger2
-@EnableKnife4j
-@Slf4j
+@EnableSwagger2//开启swagger
 public class SwaggerConfig {
     @Bean
-    public Docket docket() {
-
-        // 扫描指定接口所在路径
+    public Docket webApiConfig(){
         return new Docket(DocumentationType.SWAGGER_2)
-                .apiInfo(apiInfo())
+                .groupName("webApi")
+                .apiInfo(webApiInfo())
                 .select()
-                .apis((Predicate<RequestHandler>) RequestHandlerSelectors.basePackage("com.example.demo.controller"))
-                .paths((Predicate<String>) PathSelectors.any())
+                //只显示api路径下的页面
+                .paths(Predicates.and(PathSelectors.regex("/api/.*")))
                 .build();
     }
 
-    // swagger 信息
-    private ApiInfo apiInfo() {
-        return new ApiInfoBuilder()
-                .title("利用swagger2构建的API文档")
-                .description("用restful风格写接口")
-                .version("1.0")
+    @Bean
+    public Docket adminApiConfig(){
+        return new Docket(DocumentationType.SWAGGER_2)
+                .groupName("adminApi")
+                .apiInfo(adminApiInfo())
+                .select()
+                //只显示admin路径下的页面
+                .paths(Predicates.and(PathSelectors.regex("/admin/.*")))
                 .build();
     }
+
+    private ApiInfo webApiInfo(){
+        return new ApiInfoBuilder()
+                .title("网站-API文档")
+                .description("本文档描述了网站微服务接口定义")
+                .version("1.0")
+                .contact(new Contact("achang", "http://achang.com", "995931576@qq.com"))
+                .build();
+    }
+
+    private ApiInfo adminApiInfo(){
+        return new ApiInfoBuilder()
+                .title("后台管理系统-API文档")
+                .description("本文档描述了后台管理系统微服务接口定义")
+                .version("1.0")
+                .contact(new Contact("achang", "http://achang.com", "995931576@qq.com"))
+                .build();
+    }
+
 }
+
+
 
 
