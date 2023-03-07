@@ -26,84 +26,68 @@ import java.time.Duration;
  * @author qy
  */
 @Configuration
-@EnableCaching
-public class RedisConfig {
-
-    /**
-     * 自定义key规则
-     * @return
-     */
+public class RedisConfig{
     @Bean
-    public KeyGenerator keyGenerator() {
-        return new KeyGenerator() {
-            @Override
-            public Object generate(Object target, Method method, Object... params) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(target.getClass().getName());
-                sb.append(method.getName());
-                for (Object obj : params) {
-                    sb.append(obj.toString());
-                }
-                return sb.toString();
-            }
-        };
-    }
+    @SuppressWarnings("all")
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
 
-    /**
-     * 设置RedisTemplate规则
-     * @param redisConnectionFactory
-     * @return
-     */
-    @Bean
-    public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<Object, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        RedisTemplate<String, Object> template = new RedisTemplate<String, Object>();
+        //连接工厂
+        template.setConnectionFactory(factory);
+
+        // 序列化配置 解析任意对象
         Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
-
-        //解决查询缓存转换异常的问题
+        // json序列化利用ObjectMapper进行转义
         ObjectMapper om = new ObjectMapper();
-        // 指定要序列化的域，field,get和set,以及修饰符范围，ANY是都有包括private和public
-        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        // 指定序列化输入的类型，类必须是非final修饰的，final修饰的类，比如String,Integer等会跑出异常
-        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY); //指定要序列化的域，filed，get和set、Any是包括private// 和public
+        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);//
         jackson2JsonRedisSerializer.setObjectMapper(om);
+        // value序列化方式采用jackson
+        template.setValueSerializer(jackson2JsonRedisSerializer);
+        // hash的value序列化方式采用jackson
+        template.setHashValueSerializer(jackson2JsonRedisSerializer);
 
-        //序列号key value
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);
-        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
+        // 2.序列化String类型
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+        // key采用String的序列化方式
+        template.setKeySerializer(stringRedisSerializer);
+        // hash的key也采用String的序列化方式
+        template.setHashKeySerializer(stringRedisSerializer);
+        template.afterPropertiesSet();
 
-        redisTemplate.afterPropertiesSet();
-        return redisTemplate;
+        return template;
     }
 
-    /**
-     * 设置CacheManager缓存规则
-     * @param factory
-     * @return
-     */
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory factory) {
-        RedisSerializer<String> redisSerializer = new StringRedisSerializer();
-        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
-
-        //解决查询缓存转换异常的问题
-        ObjectMapper om = new ObjectMapper();
-        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-        jackson2JsonRedisSerializer.setObjectMapper(om);
-
-        // 配置序列化（解决乱码的问题）,过期时间600秒
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofSeconds(600))
-                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(redisSerializer))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer))
-                .disableCachingNullValues();
-
-        RedisCacheManager cacheManager = RedisCacheManager.builder(factory)
-                .cacheDefaults(config)
-                .build();
-        return cacheManager;
+        RedisCacheManager redisCacheManager =
+                RedisCacheManager.builder(factory)
+                        .cacheDefaults(defaultCacheConfig(10000))
+                        .transactionAware()
+                        .build();
+        return  redisCacheManager;
     }
+
+    private RedisCacheConfiguration defaultCacheConfig(Integer second) {
+        Jackson2JsonRedisSerializer<Object> serializer =
+                new Jackson2JsonRedisSerializer<>(Object.class);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setVisibility(PropertyAccessor.ALL,JsonAutoDetect.Visibility.ANY);
+        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        serializer.setObjectMapper(mapper);
+
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofSeconds(second))
+                .serializeKeysWith(RedisSerializationContext
+                        .SerializationPair
+                        .fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                        RedisSerializationContext
+                                .SerializationPair
+                                .fromSerializer(serializer))
+                .disableCachingNullValues();
+        return config;
+    }
+
+
 }

@@ -9,7 +9,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
  * @author Guanghao Wei
  * @create 2023-03-06 15:49
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.atguigu.yygh.common","com.atguigu.servicehosp"})
 @EnableSwagger2
 @MapperScan("com.atguigu.servicehosp.mapper")
 public class ServiceHospMain8201 {

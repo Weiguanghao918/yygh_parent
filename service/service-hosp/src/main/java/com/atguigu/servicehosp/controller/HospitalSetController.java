@@ -11,7 +11,9 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -20,11 +22,13 @@ import java.util.Random;
  */
 @RestController
 @RequestMapping("/admin/hosp/hospitalSet")
+@CrossOrigin
 public class HospitalSetController {
     @Autowired
     private HospitalSetService hospitalSetService;
 
     //查询医院设置表的所有信息
+    @ApiOperation("查询医院设置表得所有信息")
     @GetMapping("/getAll")
     public Result getAll() {
         List<HospitalSet> list = hospitalSetService.list();
@@ -51,8 +55,10 @@ public class HospitalSetController {
                                     @RequestBody(required = false) HospitalSetQueryVo hospitalSetQueryVo) {
         Page<HospitalSet> page1 = new Page<>(page, limit);
         IPage<HospitalSet> iPage = hospitalSetService.selectPage(page1, hospitalSetQueryVo);
-
-        return Result.ok(iPage.getRecords());
+        Map<String,Object> map=new HashMap<>();
+        map.put("records",iPage.getRecords());
+        map.put("total",iPage.getTotal());
+        return Result.ok(map);
     }
 
     //添加医院设置
