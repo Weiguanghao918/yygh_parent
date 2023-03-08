@@ -40,4 +40,18 @@ public class HospitalSetServiceImpl extends ServiceImpl<HospitalSetMapper, Hospi
         IPage<HospitalSet> iPage = hospitalSetMapper.selectPage(page1, queryWrapper);
         return iPage;
     }
+
+    /**
+     * 根据医院hoscode查询signKey
+     *
+     * @param hoscode
+     * @return
+     */
+    @Override
+    public String getSignKey(String hoscode) {
+        QueryWrapper<HospitalSet> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("hoscode", hoscode);
+        HospitalSet hospitalSet = hospitalSetMapper.selectOne(queryWrapper);
+        return hospitalSet.getSignKey();
+    }
 }

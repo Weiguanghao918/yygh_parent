@@ -12,4 +12,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface HospitalSetService extends IService<HospitalSet> {
     IPage<HospitalSet> selectPage(Page<HospitalSet> page1, HospitalSetQueryVo hospitalSetQueryVo);
+
+    String getSignKey(String hoscode);
 }
