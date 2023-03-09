@@ -16,4 +16,6 @@ public interface ScheduleService {
     Page<Schedule> getSchedulePageList(Integer pageNum, Integer pageSize, ScheduleOrderVo scheduleOrderVo);
 
     void deleteSchedule(String hoscode, String hosScheduleId);
+
+    Map<String, Object> getScheduleRule(Integer page, Integer limit, String hoscode, String depcode);
 }

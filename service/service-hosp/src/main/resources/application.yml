@@ -21,6 +21,9 @@ spring:
   data:
     mongodb:
       uri: mongodb://192.168.10.105:27017/yygh_hosp
+  cloud:
+    nacos:
+      server-addr: localhost:8848
 
 
 ##配置mapper.xml文件的路径

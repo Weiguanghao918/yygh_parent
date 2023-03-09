@@ -44,4 +44,25 @@ public class DictController {
         dictService.importData(file);
         return Result.ok();
     }
+
+    @ApiOperation("根据dictcode和value值查询数据字典名称")
+    @GetMapping("/getName/{dictCode}/{value}")
+    public String getName(@PathVariable("dictCode")String dictCord,
+                          @PathVariable("value")String value){
+        return dictService.getDictName(dictCord,value);
+    }
+
+    @ApiOperation("根据value值查询数据字典名称")
+    @GetMapping("/getName/{value}")
+    public String getName(@PathVariable("value")String value){
+        return dictService.getDictName("",value);
+    }
+
+    @ApiOperation("根据dict_code获取下属节点信息")
+    @GetMapping("/findByDictCode/{dictCode}")
+    public  Result findByDictCode(@PathVariable("dictCode")String dictCord){
+        List<Dict> dictList=dictService.findByDictCode(dictCord);
+        return Result.ok(dictList);
+    }
+
 }
