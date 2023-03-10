@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Api(tags = {"数据字典控制器"})
 @RestController
-@CrossOrigin
+//@CrossOrigin
 @RequestMapping("/admin/cmn/dict")
 public class DictController {
     @Autowired

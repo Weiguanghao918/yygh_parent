@@ -2,6 +2,7 @@ package com.atguigu.servicehosp.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.servicehosp.repository.ScheduleRepository;
+import com.atguigu.servicehosp.service.DepartmentService;
 import com.atguigu.servicehosp.service.HospitalService;
 import com.atguigu.servicehosp.service.ScheduleService;
 import com.atguigu.yygh.model.hosp.Schedule;
@@ -18,6 +19,8 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +40,9 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Autowired
     private HospitalService hospitalService;
+
+    @Autowired
+    private DepartmentService departmentService;
 
     /**
      * 上传排班接口
@@ -96,10 +102,11 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     /**
      * 根据医生编号，科室编号，分页查询排班信息
-     *
+     * <p>
      * 题外话：这个排版信息的封装和科室信息封装不同之处在于：
      * 科室信息是以一种树形的形式进行封装，需要遍历出所有的科室，根据大科室号进行分组后，再依次遍历每个组里面具体的小科室，将小科室封装好存在集合中，最终设置到大科室的孩子集合中
      * 排版信息只需要根据日期进行分组后，将统计的信息一并封装为对象存入列表，最后返回即可
+     *
      * @param page
      * @param limit
      * @param hoscode
@@ -143,16 +150,50 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
 
         //将列表数据和总条数进行返回
-        Map<String,Object> resultMap=new HashMap<>();
-        resultMap.put("list",ruleVoList);
-        resultMap.put("total",total);
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("list", ruleVoList);
+        resultMap.put("total", total);
         //这里使用hoscode来获取医院名称，将数据封装在一个集合中一并加入结果集合中（为了可用性）
-        String hospName=hospitalService.getHospNameByHoscode(hoscode);
-        Map<String,String> baseMap=new HashMap<>();
-        baseMap.put("hospName",hospName);
-        resultMap.put("baseMap",baseMap);
+        String hospName = hospitalService.getHospNameByHoscode(hoscode);
+        Map<String, String> baseMap = new HashMap<>();
+        baseMap.put("hospName", hospName);
+        resultMap.put("baseMap", baseMap);
 
         return resultMap;
+    }
+
+    /**
+     * 根据医院编号、部分编号、排班日期获取所有记录
+     *
+     * @param hoscode
+     * @param depcode
+     * @param workDate
+     * @return
+     */
+    @Override
+    public List<Schedule> getScheduleDetails(String hoscode, String depcode, String workDate)  {
+//        List<Schedule> scheduleList = scheduleRepository.findScheduleByHoscodeAndDepcodeAndWorkDate(hoscode, depcode, new DateTime(workDate).toDate());
+        List<Schedule> scheduleList = null;
+        try {
+            scheduleList = scheduleRepository.findScheduleByHoscodeAndDepcodeAndWorkDate(hoscode, depcode,new SimpleDateFormat("yyyy-MM-dd").parse(workDate) );
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        for(Schedule schedule:scheduleList){
+            this.packageSchedule(schedule);
+        }
+        return scheduleList;
+    }
+
+    /**
+     * 封装每个Schedule里面的参数信息（医院名称，科室名称，日期对应的星期）
+     * @param schedule
+     */
+    private void packageSchedule(Schedule schedule) {
+        schedule.getParam().put("hoscode",hospitalService.getHospNameByHoscode(schedule.getHoscode()));
+        schedule.getParam().put("depname",departmentService.getDeptmentName(schedule.getHoscode(),schedule.getDepcode()));
+        schedule.getParam().put("dayOfWeek",this.getDayOfWeek(new DateTime(schedule.getWorkDate())));
+
     }
 
     /**

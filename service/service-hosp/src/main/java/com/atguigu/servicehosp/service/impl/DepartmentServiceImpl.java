@@ -127,4 +127,21 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         return result;
     }
+
+    /**
+     * 根据医院编号和部门编号返回部门名称
+     * @param hoscode
+     * @param depcode
+     * @return
+     */
+    @Override
+    public String getDeptmentName(String hoscode, String depcode) {
+        Department department = departmentRepository.getDepartmentByHoscodeAndDepcode(hoscode, depcode);
+        if(department!=null){
+            return department.getDepname();
+        }
+        return null;
+    }
+
+
 }

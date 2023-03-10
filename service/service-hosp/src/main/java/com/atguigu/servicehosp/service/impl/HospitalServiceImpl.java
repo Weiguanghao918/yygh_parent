@@ -135,6 +135,33 @@ public class HospitalServiceImpl implements HospitalService {
     }
 
     /**
+     * 根据医院名称关键字搜索医院列表
+     * @param hospName
+     * @return
+     */
+    @Override
+    public List<Hospital> findByHospName(String hospName) {
+        List<Hospital> hospitalList =hospitalRepository.findHospitalByHosnameLike(hospName);
+        return hospitalList;
+    }
+
+    /**
+     * 根据hoscode来获取医院详情
+     * @param hoscode
+     * @return
+     */
+    @Override
+    public Map<String, Object> showHospitalDetailByHoscode(String hoscode) {
+        Map<String,Object> result=new HashMap<>();
+        Hospital hospital = this.getByHoscode(hoscode);
+        this.setHospitalHostType(hospital);
+        result.put("hospital",hospital);
+        result.put("bookingRule",hospital.getBookingRule());
+        hospital.setBookingRule(null);
+        return result;
+    }
+
+    /**
      * 根据省市区 医院等级编号远程调用Dict控制器方法获取对应的中文名称
      *
      * @param hospital
